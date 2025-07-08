@@ -3,6 +3,7 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const https = require("https");
 require("dotenv").config();
 
 const app = express();
@@ -29,8 +30,30 @@ app.get("/health", (req, res) => {
 app.use("/api/projects", require("./routes/projects"));
 app.use("/api/other-projects", require("./routes/otherProjects"));
 
+// SSL config
+let useHttps = false;
+let sslKey, sslCert;
+try {
+  const keyPath = process.env.SSL_KEY_PATH || "key.pem";
+  const certPath = process.env.SSL_CERT_PATH || "cert.pem";
+  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    sslKey = fs.readFileSync(keyPath);
+    sslCert = fs.readFileSync(certPath);
+    useHttps = true;
+  }
+} catch (e) {
+  console.warn("Không thể đọc file SSL, server sẽ chạy HTTP.");
+}
+
 // Start server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-  console.log(`Upload directory: ${path.resolve(uploadPath)}`);
-});
+if (useHttps) {
+  https.createServer({ key: sslKey, cert: sslCert }, app).listen(port, () => {
+    console.log(`HTTPS server is running on port ${port}`);
+    console.log(`Upload directory: ${path.resolve(uploadPath)}`);
+  });
+} else {
+  app.listen(port, () => {
+    console.log(`HTTP server is running on port ${port}`);
+    console.log(`Upload directory: ${path.resolve(uploadPath)}`);
+  });
+}
