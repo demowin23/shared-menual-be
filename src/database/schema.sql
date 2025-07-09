@@ -37,3 +37,27 @@ CREATE TRIGGER update_projects_updated_at
     BEFORE UPDATE ON projects
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column(); 
+
+-- Drop news table if exists
+DROP TABLE IF EXISTS news;
+
+-- Create news table
+CREATE TABLE news (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    content TEXT,
+    image TEXT,
+    short_intro TEXT,
+    is_featured BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on created_at for news
+CREATE INDEX idx_news_created_at ON news(created_at DESC);
+
+-- Trigger for updated_at
+CREATE TRIGGER update_news_updated_at
+    BEFORE UPDATE ON news
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column(); 

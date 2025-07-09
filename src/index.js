@@ -29,6 +29,7 @@ app.get("/health", (req, res) => {
 // Routes
 app.use("/api/projects", require("./routes/projects"));
 app.use("/api/other-projects", require("./routes/otherProjects"));
+app.use("/api/news", require("./routes/news"));
 
 // SSL config
 let useHttps = false;
