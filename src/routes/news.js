@@ -26,7 +26,11 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: {
+    fileSize: 50 * 1024 * 1024, // Tăng lên 50MB
+    files: 1, // Giới hạn 1 file
+    fieldSize: 10 * 1024 * 1024, // Giới hạn field size 10MB
+  },
 });
 
 // Lấy danh sách news (có phân trang, lọc is_featured)
