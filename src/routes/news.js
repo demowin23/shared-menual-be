@@ -36,17 +36,21 @@ const upload = multer({
 // Lấy danh sách news (có phân trang, lọc is_featured)
 router.get("/", async (req, res) => {
   try {
-    let { page, limit, is_featured } = req.query;
+    let { page, limit, is_featured, type } = req.query;
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 0;
     let query =
-      "SELECT id, title, image, short_intro, content, is_featured, created_at, updated_at FROM news";
+      "SELECT id, title, image, short_intro, content, is_featured, type, created_at, updated_at FROM news";
     let where = [];
     let values = [];
     let total = 0;
     if (typeof is_featured !== "undefined") {
       where.push("is_featured = $" + (values.length + 1));
       values.push(is_featured === "true" || is_featured === true);
+    }
+    if (typeof type !== "undefined" && type !== "") {
+      where.push("type = $" + (values.length + 1));
+      values.push(type);
     }
     if (where.length > 0) {
       query += " WHERE " + where.join(" AND ");
@@ -96,19 +100,20 @@ router.get("/:id", async (req, res) => {
 // Thêm mới news
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { title, content, short_intro, is_featured } = req.body;
+    const { title, content, short_intro, is_featured, type } = req.body;
     if (!title) {
       return res.status(400).json({ error: "Title is required" });
     }
     const image = req.file ? req.file.filename : null;
     const result = await db.query(
-      "INSERT INTO news (title, content, image, short_intro, is_featured) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      "INSERT INTO news (title, content, image, short_intro, is_featured, type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [
         title,
         content,
         image,
         short_intro,
         is_featured === "true" || is_featured === true,
+        type || "news",
       ]
     );
     res.status(201).json(result.rows[0]);
@@ -122,7 +127,7 @@ router.post("/", upload.single("image"), async (req, res) => {
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, short_intro, is_featured } = req.body;
+    const { title, content, short_intro, is_featured, type } = req.body;
     // Lấy news hiện tại
     const existing = await db.query("SELECT * FROM news WHERE id = $1", [id]);
     if (existing.rows.length === 0) {
@@ -140,7 +145,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       image = req.file.filename;
     }
     const result = await db.query(
-      "UPDATE news SET title = COALESCE($1, title), content = COALESCE($2, content), image = $3, short_intro = COALESCE($4, short_intro), is_featured = COALESCE($5, is_featured), updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *",
+      "UPDATE news SET title = COALESCE($1, title), content = COALESCE($2, content), image = $3, short_intro = COALESCE($4, short_intro), is_featured = COALESCE($5, is_featured), type = COALESCE($6, type), updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *",
       [
         title,
         content,
@@ -149,6 +154,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
         typeof is_featured === "undefined"
           ? existing.rows[0].is_featured
           : is_featured === "true" || is_featured === true,
+        type || existing.rows[0].type || "news",
         id,
       ]
     );
