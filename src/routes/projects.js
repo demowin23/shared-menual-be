@@ -46,7 +46,7 @@ router.get("/", async (req, res) => {
       const totalResult = await db.query("SELECT COUNT(*) FROM projects");
       total = parseInt(totalResult.rows[0].count, 10);
       const result = await db.query(
-        "SELECT * FROM projects ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+        "SELECT * FROM projects ORDER BY created_at ASC LIMIT $1 OFFSET $2",
         [sizeNum, offset]
       );
       projects = result.rows;
@@ -73,7 +73,7 @@ router.get("/", async (req, res) => {
       );
       total = parseInt(totalResult.rows[0].count, 10);
       const result = await db.query(
-        `SELECT * FROM projects WHERE areas = ANY($1::text[]) ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+        `SELECT * FROM projects WHERE areas = ANY($1::text[]) ORDER BY created_at ASC LIMIT $2 OFFSET $3`,
         [areaIds, sizeNum, offset]
       );
       projects = result.rows;
